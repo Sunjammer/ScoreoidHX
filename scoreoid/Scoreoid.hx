@@ -27,7 +27,7 @@ private enum ResultType {
 	GET;
 	POST;
 }
-private class ScoreResult {
+class ScoreResult {
 	public var type:ResultType;
 	public var rawData:Dynamic;
 	public var scores:Array<Score>;
@@ -39,16 +39,19 @@ private class ScoreResult {
 			for (item in itemArray) {
 				scores.push(new Score(item.Player.username, item.Score.score));
 			}
-			trace("Get result");
 		}else {
-			trace("Post result");
 		}
+	}
+	public function getHighest():Score {
+		if (scores == null || scores.length == 0) return new Score("N/A", 0);
+		return scores[0];
 	}
 	public function toString():String 
 	{
 		return "[ScoreResult scores=" + scores + "]";
 	}
 }
+
 private interface IRequest {
 	public var responder:Signal1<ScoreResult>;
 	public var id:Int;
@@ -79,7 +82,7 @@ private class ScoreRequest implements IRequest{
 		var ldr:URLLoader = cast e.currentTarget;
 		ldr.removeEventListener(Event.COMPLETE, onResult);
 		var obj = Json.parse(ldr.data);
-		responder.dispatch(new ScoreResult(GET, obj));
+		responder.dispatch(Scoreoid.lastResult = new ScoreResult(GET, obj));
 		Scoreoid.requests.remove(id);
 	}
 }
@@ -92,8 +95,9 @@ class Scoreoid
 	static var id:String;
 	static var requests = new Map<Int, IRequest>();
 	static var requestID:Int = 0;
+	public static var lastResult:ScoreResult = new ScoreResult(GET);
 
-	public static function init(key:String, gameID):Void {
+	public static function init(key:String, gameID:String):Void {
 		Scoreoid.key = key;
 		Scoreoid.id = gameID;
 	}
